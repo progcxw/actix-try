@@ -1,0 +1,31 @@
+[package]
+name = "actix-try"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+actix-rt = "2.10.0"
+actix-web = "4.11.0"
+reqwest = "0.12.23"
+
+tokio = "1.47.1"
+serde = { version = "1", features = ["derive"]}
+
+[dependencies.sqlx]
+version = "0.8.6"
+default-features = false
+features = [
+    "runtime-tokio-rustls",
+    "macros",
+    "postgres",
+    "uuid",
+    "chrono",
+    "migrate"
+]
+
+[lib]
+path = "src/lib.rs"
+
+[[bin]]
+path = "src/main.rs"
+name = "actix-try"
