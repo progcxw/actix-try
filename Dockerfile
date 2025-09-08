@@ -1,14 +1,14 @@
-# We use the latest Rust stable release as base image
+# 使用最新的稳定版 Rust 作为基础镜像
 FROM rust:1.89.0
-
-# Let's switch our working directory to `app` (equivalent to `cd app`)
-# The `app` folder will be created for us by Docker in case it does not
-# exist already.
+# 将工作目录切换到 `app` (相当于执行 `cd app`)
+# 如果 `app` 文件夹不存在，Docker 会自动为我们创建
 WORKDIR /app
-# Copy all files from our working environment to our Docker image
+# 将当前工作环境中的所有文件复制到 Docker 镜像中
 COPY . .
-# Let's build our binary!
-# We'll use the release profile to make it faaaast
+# 启用离线模式，让 sqlx 用 .sqlx 里的缓存，而不是去连数据库
+ENV SQLX_OFFLINE=true
+# 构建我们的二进制文件！
+# 使用 release 配置以获得更快的性能
 RUN cargo build --release
-# When `docker run` is executed, launch the binary!
+# 当执行 `docker run` 时，启动该二进制文件！
 ENTRYPOINT ["./target/release/actix-try"]
