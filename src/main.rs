@@ -1,9 +1,20 @@
 use std::net::TcpListener;
-use actix_try::startup;
+use sqlx::PgPool;
+use actix_try::{startup::run, configuration::get_configuration, telemetry::setup_logging};
+
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    let listener = TcpListener::bind("127.0.0.1:0")
-        .expect("Failed to bind random port");
-    startup::run(listener)?.await
+    setup_logging("actix_try".into(), "info".into(), std::io::stdout);
+
+    let configuration = get_configuration().expect("Failed to read configuration");
+    let connection_string = configuration.database.connection_string();
+    let connection_pool = PgPool::connect(&connection_string)
+        .await
+        .expect("Failed to connect to Postgres");
+
+    let address = format!("127.0.0.1:{}", configuration.port);
+    let listener = TcpListener::bind(address)?;
+    run(listener, connection_pool)?.await
 }
+
