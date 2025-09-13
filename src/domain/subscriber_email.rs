@@ -22,7 +22,25 @@ impl AsRef<str> for SubscriberEmail {
 #[cfg(test)]
 mod tests {
     use super::SubscriberEmail;
-    use claim::assert_err;
+    use claim::{assert_err, assert_ok};
+    use fake::{Fake, faker::internet::en::SafeEmail};
+    use quickcheck::{Arbitrary, Gen};
+
+    #[derive(Debug, Clone)]
+    struct ValidEmailFixture(pub String);
+
+    impl Arbitrary for ValidEmailFixture {
+        fn arbitrary<G: Gen>(g: &mut G) -> Self {
+            let email: String = SafeEmail().fake_with_rng(g);
+            Self(email)
+        }
+    }
+
+    #[quickcheck_macros::quickcheck]
+    fn valid_emails_are_parsed_successfully(valid_email: ValidEmailFixture) {
+        dbg!(&valid_email.0);
+        assert_ok!(SubscriberEmail::parse(valid_email.0));
+    }
 
     #[test]
     fn empty_string_is_rejected() {

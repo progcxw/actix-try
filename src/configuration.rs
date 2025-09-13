@@ -1,9 +1,29 @@
+use crate::domain::SubscriberEmail;
+
 /// 应用整体配置项
 /// 从配置文件与环境变量反序列化而来
 #[derive(serde::Deserialize, Debug, Clone)]
 pub struct Settings {
     pub database: DatabaseSettings,       // 数据库配置
     pub application: ApplicationSettings, // 应用运行时配置（主机/端口等）
+    pub email: EmailClientSettings,       // 邮件客户端配置
+}
+
+
+#[derive(serde::Deserialize, Debug, Clone)]
+pub struct EmailClientSettings {
+    pub smtp_host: String,
+    pub smtp_port: u16,
+    pub smtp_username: String,
+    pub smtp_password: String,
+    pub use_starttls: bool,
+    pub sender_email: String,
+}
+
+impl EmailClientSettings {
+    pub fn sender(&self) -> Result<SubscriberEmail, String> {
+        SubscriberEmail::parse(self.sender_email.clone())
+    }
 }
 
 /// 数据库连接配置

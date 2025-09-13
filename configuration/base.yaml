@@ -6,3 +6,10 @@ database:
   username: "progcxw"
   password: ""
   database_name: "newsletter"
+email:
+  smtp_host: "smtp.163.com"
+  smtp_port: 465
+  use_starttls: false
+  smtp_username: "test@163.com"
+  smtp_password: ""
+  sender_email: "test@163.com"

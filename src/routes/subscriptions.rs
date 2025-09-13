@@ -2,7 +2,7 @@ use actix_web::{web, Responder, HttpResponse};
 use sqlx::PgPool;
 use chrono::Utc;
 use uuid::Uuid;
-use crate::domain::{subscriber_name::SubscriberName, subscriber_email::SubscriberEmail, new_subscriber::NewSubscriber};
+use crate::domain::new_subscriber::NewSubscriber;
 
 #[tracing::instrument(
     name = "Adding a new subscription",
@@ -13,16 +13,9 @@ use crate::domain::{subscriber_name::SubscriberName, subscriber_email::Subscribe
     )
 )]
 pub async fn subscribe(form: web::Form<FormData>, pool: web::Data<PgPool>) -> impl Responder {
-    let FormData { name, email } = form.into_inner();
-    let subscriber = NewSubscriber {
-        email: match SubscriberEmail::parse(email) {
-            Ok(email) => email,
-            Err(e) => return HttpResponse::BadRequest().body(e)
-        },
-        name: match SubscriberName::parse(name) {
-            Ok(name) => name,
-            Err(e) => return HttpResponse::BadRequest().body(e)
-        },
+    let subscriber = match NewSubscriber::try_from(form.0){
+        Ok(subscriber) => subscriber,
+        Err(e) => return HttpResponse::BadRequest().body(e),
     };
     match insert_subscription(&pool, &subscriber).await
     {
@@ -57,6 +50,6 @@ pub async fn insert_subscription(pool: &PgPool, subscriber: &NewSubscriber) -> R
 
 #[derive(serde::Deserialize)]
 pub struct FormData {
-    name: String,
-    email: String,
+    pub name: String,
+    pub email: String,
 }

@@ -4,6 +4,7 @@ use std::net::TcpListener;
 use uuid::Uuid;
 use actix_try::{startup::run, configuration::{get_configuration, DatabaseSettings}, telemetry::setup_logging};
 use once_cell::sync::Lazy;
+use actix_try::service::email_client::EmailClient;
 
 pub struct TestApp {
     pub address: String,
@@ -93,7 +94,20 @@ async fn spawn_app() -> TestApp {
     let listener = TcpListener::bind("127.0.0.1:0")
         .expect("Failed to bind random port");
     let port = listener.local_addr().unwrap().port();
-    let server = run(listener, pool.clone()).expect("Failed to start server");
+
+    let email_settings = configuration.email.clone();
+    let sender = email_settings.sender()
+        .expect("invalid sender email address");
+    let email_client = EmailClient::new(
+        email_settings.smtp_host,
+        email_settings.smtp_port,
+        email_settings.smtp_username,
+        email_settings.smtp_password,
+        email_settings.use_starttls,
+        sender,
+    );
+
+    let server = run(listener, pool.clone(), email_client).expect("Failed to start server");
     let _ = tokio::spawn(server);
 
     TestApp {
